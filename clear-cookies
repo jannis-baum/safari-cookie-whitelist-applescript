@@ -1,0 +1,29 @@
+#! /usr/bin/env osascript
+
+set urls to {}
+
+tell application "System Events"
+	tell application process "Safari"
+		set frontmost to true
+		keystroke "," using command down
+		delay 1
+		tell window 1
+			click button "Privacy" of toolbar 1 of it
+            click button "Manage Website Data…" of group 1 of group 1
+        end tell
+        tell window "Privacy" to tell sheet 1 to tell scroll area 1 to tell table 1
+            # wait for cookies to load
+            repeat while length of (entire contents as list) = 1
+                delay 0.1
+            end repeat
+            repeat with cookie in rows
+                set uiContents to entire contents of cookie as list
+                set urls to urls & value of item 1 of item 3 of uiContents
+                select cookie
+            end repeat
+        end tell
+    end tell
+end tell
+
+return urls
+
