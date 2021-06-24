@@ -1,9 +1,0 @@
-#!/bin/sh
-
-while read line
-do
-    [[ $1 =~ $line ]] && exit 0
-done < "whitelist.txt"
-
-exit 1
-

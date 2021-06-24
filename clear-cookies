@@ -1,29 +1,24 @@
-#! /usr/bin/env osascript
+#!/usr/bin/env python3
 
-set urls to {}
+import subprocess
+import re
 
-tell application "System Events"
-	tell application process "Safari"
-		set frontmost to true
-		keystroke "," using command down
-		delay 1
-		tell window 1
-			click button "Privacy" of toolbar 1 of it
-            click button "Manage Website Data…" of group 1 of group 1
-        end tell
-        tell window "Privacy" to tell sheet 1 to tell scroll area 1 to tell table 1
-            # wait for cookies to load
-            repeat while length of (entire contents as list) = 1
-                delay 0.1
-            end repeat
-            repeat with cookie in rows
-                set uiContents to entire contents of cookie as list
-                set urls to urls & value of item 1 of item 3 of uiContents
-                select cookie
-            end repeat
-        end tell
-    end tell
-end tell
+def matches_whitelist(url):
+    with open('whitelist.txt', 'r') as whitelist:
+        for item in whitelist.readlines():
+            if re.search(item[:-1], url):
+                return True
+    return False
 
-return urls
+def main():
+    result = subprocess.run(['osascript', 'list-cookies.scpt'], capture_output=True)
+    cookie_matches = re.findall('UI element (.*?) of row (\d+)', result.stderr.decode('utf-8'))
+    cookies = {
+        groups[1]: None for groups in cookie_matches[::-1]
+            if not matches_whitelist(groups[0])
+    }
+    subprocess.run(['osascript', 'delete-cookies.scpt'] + list(cookies), capture_output=True)
 
+if __name__ == '__main__':
+    main()
+            
