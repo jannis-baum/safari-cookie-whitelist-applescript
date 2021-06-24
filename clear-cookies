@@ -1,24 +1,28 @@
 #!/usr/bin/env python3
 
+import os
 import subprocess
 import re
 
+dirname = ''
+
 def matches_whitelist(url):
-    with open('whitelist.txt', 'r') as whitelist:
+    with open(f'{dirname}whitelist.txt', 'r') as whitelist:
         for item in whitelist.readlines():
             if re.search(item[:-1], url):
                 return True
     return False
 
 def main():
-    result = subprocess.run(['osascript', 'list-cookies.scpt'], capture_output=True)
+    result = subprocess.run(['osascript', f'{dirname}list-cookies.scpt'], capture_output=True)
     cookie_matches = re.findall('UI element (.*?) of row (\d+)', result.stderr.decode('utf-8'))
     cookies = {
         groups[1]: None for groups in cookie_matches[::-1]
             if not matches_whitelist(groups[0])
     }
-    subprocess.run(['osascript', 'delete-cookies.scpt'] + list(cookies), capture_output=True)
+    subprocess.run(['osascript', f'{dirname}delete-cookies.scpt'] + list(cookies), capture_output=True)
 
 if __name__ == '__main__':
+    dirname = os.path.dirname(__file__) + '/'
     main()
             
